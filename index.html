@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Runware AI Generator</title>
+  <title>Runware AI Image-to-Image Generator</title>
   <style>
     body { font-family: Arial, sans-serif; background: #111; color: #fff; text-align: center; padding: 20px; }
     input, button { padding: 10px; margin: 10px; border-radius: 5px; border: none; }
     input[type="text"] { width: 60%; }
     button { background: limegreen; color: #fff; cursor: pointer; }
     img { margin-top: 20px; max-width: 80%; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+    pre { text-align: left; background: #222; padding: 10px; border-radius: 8px; overflow-x: auto; }
   </style>
 </head>
 <body>
@@ -23,7 +24,7 @@
   <div id="result"></div>
 
   <script>
-    const apiKey = "WMYUiqYoHkuoNQk4lFVMyk4MvTCxQ896"; // <-- apna API key yaha lagao
+    const apiKey = "WMYUiqYoHkuoNQk4lFVMyk4MvTCxQ896"; // <-- Apna Runware API key yaha daalo
 
     async function generateImage() {
       const fileInput = document.getElementById("imageUpload");
@@ -37,7 +38,7 @@
 
       resultDiv.innerHTML = "⏳ Uploading image...";
 
-      // --- STEP 1: Upload image to Runware ---
+      // --- STEP 1: Upload image ---
       const formData = new FormData();
       formData.append("file", fileInput.files[0]);
 
@@ -45,7 +46,7 @@
       try {
         uploadRes = await fetch("https://api.runware.ai/v1/uploads", {
           method: "POST",
-          headers: { "Authorization": `Bearer ${apiKey}` },
+          headers: { "Authorization": `Bearer ${apiKey}` }, // ❌ NO Content-Type here
           body: formData
         });
       } catch (e) {
@@ -57,7 +58,7 @@
       console.log("Upload response:", uploadData);
 
       if (!uploadData.url) {
-        resultDiv.innerHTML = "❌ Upload error: " + JSON.stringify(uploadData);
+        resultDiv.innerHTML = "❌ Upload error: <pre>" + JSON.stringify(uploadData, null, 2) + "</pre>";
         return;
       }
 
@@ -65,10 +66,10 @@
 
       resultDiv.innerHTML = "⏳ Generating with AI...";
 
-      // --- STEP 2: Run Inference ---
+      // --- STEP 2: Image Inference ---
       const payload = [{
         taskType: "imageInference",
-        model: "civitai:43331@94640",
+        model: "civitai:43331@94640", // ✅ Model ID
         prompt: prompt,
         imageUrl: imageUrl,
         width: 512,
@@ -76,14 +77,20 @@
         numInferenceSteps: 30
       }];
 
-      const inferRes = await fetch("https://api.runware.ai/v1/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(payload)
-      });
+      let inferRes;
+      try {
+        inferRes = await fetch("https://api.runware.ai/v1/tasks", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+          },
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {
+        resultDiv.innerHTML = "❌ Inference failed: " + e.message;
+        return;
+      }
 
       const inferData = await inferRes.json();
       console.log("Inference response:", inferData);
