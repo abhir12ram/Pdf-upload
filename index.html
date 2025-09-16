@@ -2,104 +2,356 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Runware AI Image-to-Image Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task WebApp</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #111; color: #fff; text-align: center; padding: 20px; }
-    input, button { padding: 10px; margin: 10px; border-radius: 5px; border: none; }
-    input[type="text"] { width: 60%; }
-    button { background: limegreen; color: #fff; cursor: pointer; }
-    img { margin-top: 20px; max-width: 80%; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-    pre { text-align: left; background: #222; padding: 10px; border-radius: 8px; overflow-x: auto; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #0d1117; /* Dark Blue Background */
+      color: #e0e0e0;
+    }
+    header {
+      background: linear-gradient(135deg, #0d47a1, #1565c0);
+      color: white;
+      padding: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      position: relative;
+      box-shadow: 0px 4px 8px rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* 3 Dot Menu */
+    .menu-container { position: relative; }
+    .menu-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .menu-popup {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 35px;
+      background: #1e2a3a;
+      border-radius: 8px;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.5);
+      overflow: hidden;
+      z-index: 100;
+    }
+    .menu-popup a {
+      display: block;
+      padding: 10px 15px;
+      text-decoration: none;
+      color: #bbdefb;
+      font-size: 14px;
+    }
+    .menu-popup a:hover {
+      background: #1565c0;
+      color: #fff;
+    }
+
+    /* Section Styling */
+    .section {
+      padding: 15px;
+      margin: 15px;
+      background: #1b263b;
+      border-radius: 15px;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.6);
+    }
+    .section h2 {
+      margin-bottom: 15px;
+      font-size: 18px;
+      color: #64b5f6;
+    }
+    .task-input {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+    .task-input input[type="text"],
+    .date-input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #1565c0;
+      outline: none;
+      background: #0d1b2a;
+      color: #e0e0e0;
+    }
+    .task-input button {
+      background: #1565c0;
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .task-input button:hover {
+      background: #1e88e5;
+    }
+    .task-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .task-list li {
+      background: linear-gradient(135deg, #1e2a3a, #0d1b2a);
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      color: #e0e0e0;
+    }
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .task-list li.completed {
+      background: linear-gradient(135deg, #2e7d32, #1b5e20);
+      text-decoration: line-through;
+      color: #a5d6a7;
+    }
+    .task-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .delete-btn, .note-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .delete-btn { color: #ef5350; }
+    .note-btn { color: #64b5f6; }
+    .task-note {
+      margin-top: 5px;
+      font-size: 13px;
+      font-style: italic;
+      color: #90caf9;
+      padding-left: 25px;
+    }
+    .date-section { margin-bottom: 20px; }
+    .date-section h3 {
+      margin: 10px 0;
+      color: #42a5f5;
+      font-size: 16px;
+      border-bottom: 1px solid #1565c0;
+      padding-bottom: 5px;
+    }
+
+    /* ✅ Scroll limit */
+    #dailyTasks, #challengeTasks {
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    /* ✅ Progress Circle */
+    .progress-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 10px 0 20px 0;
+    }
+    .progress {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: conic-gradient(#42a5f5 var(--percent), #263238 0);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: #90caf9;
+    }
   </style>
 </head>
 <body>
-  <h2>Runware AI Image-to-Image Generator</h2>
-  
-  <input type="file" id="imageUpload" accept="image/*"><br>
-  <input id="prompt" type="text" placeholder="Enter your prompt..." 
-         value="Make this image photorealistic with divine lighting">
-  <br>
-  <button onclick="generateImage()">Generate Image</button>
-  
-  <div id="result"></div>
+
+  <!-- Header with 3-dot Menu -->
+  <header>
+    My Task App
+    <div class="menu-container">
+      <button class="menu-btn" onclick="toggleMenu()">⋮</button>
+      <div class="menu-popup" id="menuPopup">
+        <a href="about.html">About</a>
+        <a href="settings.html">Settings</a>
+        <a href="help.html">Help</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Daily Task -->
+  <div class="section">
+    <h2>🌞 Daily Task</h2>
+    <div class="progress-container">
+      <div class="progress" id="dailyProgress" style="--percent: 0%">0%</div>
+    </div>
+    <div class="task-input">
+      <input type="text" id="dailyInput" placeholder="Add new daily task...">
+      <input type="date" id="dailyDate" class="date-input" placeholder="YYYY-MM-DD">
+      <button onclick="addDailyTask()">Add</button>
+    </div>
+    <div id="dailyTasks"></div>
+  </div>
+
+  <!-- 21 Days Task -->
+  <div class="section">
+    <h2>📅 21 Days Challenge</h2>
+    <div class="progress-container">
+      <div class="progress" id="challengeProgress" style="--percent: 0%">0%</div>
+    </div>
+    <div class="task-input">
+      <input type="text" id="challengeInput" placeholder="Add new 21 days task...">
+      <input type="date" id="challengeStart" class="date-input" placeholder="Start Date">
+      <input type="date" id="challengeEnd" class="date-input" placeholder="End Date">
+      <button onclick="addChallengeTask()">Add</button>
+    </div>
+    <div id="challengeTasks"></div>
+  </div>
 
   <script>
-    const apiKey = "WMYUiqYoHkuoNQk4lFVMyk4MvTCxQ896"; // <-- Apna Runware API key yaha daalo
+    /* ✅ Toggle 3-dot Menu */
+    function toggleMenu() {
+      const menu = document.getElementById("menuPopup");
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    }
+    window.onclick = function(event) {
+      if (!event.target.matches('.menu-btn')) {
+        const menu = document.getElementById("menuPopup");
+        if (menu.style.display === "block") {
+          menu.style.display = "none";
+        }
+      }
+    }
 
-    async function generateImage() {
-      const fileInput = document.getElementById("imageUpload");
-      const prompt = document.getElementById("prompt").value;
-      const resultDiv = document.getElementById("result");
+    /* ✅ Daily Task */
+    function addDailyTask() {
+      const input = document.getElementById("dailyInput");
+      const dateVal = document.getElementById("dailyDate").value;
+      const container = document.getElementById("dailyTasks");
 
-      if (!fileInput.files[0]) {
-        alert("Please upload an image first.");
-        return;
+      if (input.value.trim() === "" || dateVal.trim() === "") return;
+
+      let dateSection = document.querySelector(`#dailyTasks [data-date='${dateVal}']`);
+      if (!dateSection) {
+        dateSection = document.createElement("div");
+        dateSection.classList.add("date-section");
+        dateSection.setAttribute("data-date", dateVal);
+        dateSection.innerHTML = `<h3>📅 ${dateVal}</h3><ul class="task-list"></ul>`;
+        container.appendChild(dateSection);
       }
 
-      resultDiv.innerHTML = "⏳ Uploading image...";
+      const ul = dateSection.querySelector(".task-list");
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <div class="task-header">
+          <div>
+            <input type="checkbox" onclick="toggleComplete(this, 'daily')">
+            <span>${input.value}</span>
+          </div>
+          <div class="task-actions">
+            <button class="note-btn" onclick="addNote(this)">✏️</button>
+            <button class="delete-btn" onclick="this.closest('li').remove(); updateProgress('daily');">❌</button>
+          </div>
+        </div>
+        <div class="task-note"></div>
+      `;
+      ul.appendChild(li);
 
-      // --- STEP 1: Upload image ---
-      const formData = new FormData();
-      formData.append("file", fileInput.files[0]);
+      input.value = "";
+      document.getElementById("dailyDate").value = "";
+      updateProgress('daily');
+    }
 
-      let uploadRes;
-      try {
-        uploadRes = await fetch("https://api.runware.ai/v1/uploads", {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${apiKey}` }, // ❌ NO Content-Type here
-          body: formData
-        });
-      } catch (e) {
-        resultDiv.innerHTML = "❌ Upload failed: " + e.message;
-        return;
+    /* ✅ 21 Days Challenge */
+    function addChallengeTask() {
+      const input = document.getElementById("challengeInput");
+      const startVal = document.getElementById("challengeStart").value;
+      const endVal = document.getElementById("challengeEnd").value;
+      const container = document.getElementById("challengeTasks");
+
+      if (input.value.trim() === "" || startVal.trim() === "") return;
+
+      let dateSection = document.querySelector(`#challengeTasks [data-start='${startVal}']`);
+      if (!dateSection) {
+        dateSection = document.createElement("div");
+        dateSection.classList.add("date-section");
+        dateSection.setAttribute("data-start", startVal);
+        dateSection.innerHTML = `<h3>📅 Start: ${startVal}</h3><ul class="task-list"></ul>`;
+        container.appendChild(dateSection);
       }
 
-      const uploadData = await uploadRes.json();
-      console.log("Upload response:", uploadData);
+      const ul = dateSection.querySelector(".task-list");
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <div class="task-header">
+          <div>
+            <input type="checkbox" onclick="toggleComplete(this, 'challenge')">
+            <span>${input.value}</span>
+            <small>${endVal ? " | End: " + endVal : ""}</small>
+          </div>
+          <div class="task-actions">
+            <button class="note-btn" onclick="addNote(this)">✏️</button>
+            <button class="delete-btn" onclick="this.closest('li').remove(); updateProgress('challenge');">❌</button>
+          </div>
+        </div>
+        <div class="task-note"></div>
+      `;
+      ul.appendChild(li);
 
-      if (!uploadData.url) {
-        resultDiv.innerHTML = "❌ Upload error: <pre>" + JSON.stringify(uploadData, null, 2) + "</pre>";
-        return;
+      input.value = "";
+      document.getElementById("challengeStart").value = "";
+      document.getElementById("challengeEnd").value = "";
+      updateProgress('challenge');
+    }
+
+    /* ✅ Mark Complete */
+    function toggleComplete(checkbox, type) {
+      const li = checkbox.closest("li");
+      li.classList.toggle("completed", checkbox.checked);
+      updateProgress(type);
+    }
+
+    /* ✅ Add/Edit Note */
+    function addNote(btn) {
+      const li = btn.closest("li");
+      const noteDiv = li.querySelector(".task-note");
+      const currentNote = noteDiv.textContent;
+      const newNote = prompt("Write your note:", currentNote);
+      if (newNote !== null) {
+        noteDiv.textContent = newNote.trim();
       }
+    }
 
-      const imageUrl = uploadData.url;
-
-      resultDiv.innerHTML = "⏳ Generating with AI...";
-
-      // --- STEP 2: Image Inference ---
-      const payload = [{
-        taskType: "imageInference",
-        model: "civitai:43331@94640", // ✅ Model ID
-        prompt: prompt,
-        imageUrl: imageUrl,
-        width: 512,
-        height: 512,
-        numInferenceSteps: 30
-      }];
-
-      let inferRes;
-      try {
-        inferRes = await fetch("https://api.runware.ai/v1/tasks", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`
-          },
-          body: JSON.stringify(payload)
-        });
-      } catch (e) {
-        resultDiv.innerHTML = "❌ Inference failed: " + e.message;
-        return;
-      }
-
-      const inferData = await inferRes.json();
-      console.log("Inference response:", inferData);
-
-      if (inferData[0] && inferData[0].output && inferData[0].output[0] && inferData[0].output[0].imageURL) {
-        resultDiv.innerHTML = `<img src="${inferData[0].output[0].imageURL}" alt="Generated Image">`;
+    /* ✅ Update Progress Circle */
+    function updateProgress(type) {
+      let container, progressDiv;
+      if (type === 'daily') {
+        container = document.getElementById("dailyTasks");
+        progressDiv = document.getElementById("dailyProgress");
       } else {
-        resultDiv.innerHTML = `<pre>${JSON.stringify(inferData, null, 2)}</pre>`;
+        container = document.getElementById("challengeTasks");
+        progressDiv = document.getElementById("challengeProgress");
       }
+
+      const tasks = container.querySelectorAll("li");
+      const total = tasks.length;
+      const completed = container.querySelectorAll("li.completed").length;
+      const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      progressDiv.style.setProperty("--percent", percent + "%");
+      progressDiv.textContent = percent + "%";
     }
   </script>
 </body>
